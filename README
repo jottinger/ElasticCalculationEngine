@@ -1,0 +1,62 @@
+This is the source for an ElasticCalculationEngine, meant to demonstrate some of GigaSpaces XAP's scaling features.
+
+To build:
+
+   mvn package
+
+The normal flow of operations will be to deploy the datagrid, and then use a client to utilize the grid in
+one of two modes: an executor-based mode, and a master/worker-based mode.
+
+There's also a scaling module, which allows a user to alter the characteristics of a deployed datagrid during
+runtime.
+
+To deploy the datagrid, there are three steps:
+
+   1. Build
+      mvn package
+   2. Start an instance of XAP
+      gs-agent gsa.gsc 4
+   3. Deploy the datagrid
+      gs deploy ece-datagrid/target/ece-datagrid.jar
+
+Now you can start the ece-client application. Assume the classpath has been set.
+
+To use the Executor-based mechanism:
+
+   java $OPTIONS org.openspaces.ece.client.ConsoleClient -type executor
+
+To use the Master/Worker mechanism:
+
+   java $OPTIONS org.openspaces.ece.client.ConsoleClient -type masterworker
+
+The scaling module allows dynamic configuration of a datagrid. Normally, the scaling
+will be done in response to datagrid configuration and load, but this app demonstrates
+manual control of the datagrid.
+
+To use it, you must have an instance of XAP with the Elastic Service Manager running.
+
+If you are using the gs-agent line from the earlier example, shut down the gs-agent
+and restart it with:
+
+   gs-agent gsa.global.esm 1 gsa.gsc 0 gsa.global.gsm 2 gsa.global.lus 2
+
+This will create an instance of the Elastic Service Manager as well as instances of
+the GigaSpaces Manager container and the Lookup Service. (It will configure no more
+than two GSMs globally, and no more than two LUSes globally; if you have more than
+one machine running this line, some machines will not start the GSM or LUS if two
+containers exist.)
+
+You can run the Scaling Module like so:
+
+   java $OPTIONS org.openspaces.ece.scalingmodule.ScaleApp
+
+If the ESM does not have an instance of the ece-datagrid processing unit active
+(which will be the case on a cold restart), this application will deploy and
+configure one programmatically, starting up any required GigaSpace Containers.
+
+It then presents you with a simple console prompt:
+
++,-,quit input>
+
+If you enter "+", it will enlarge the data grid. If you enter "-", it will shrink
+the data grid. "quit", surprisingly, shuts down the console application.
