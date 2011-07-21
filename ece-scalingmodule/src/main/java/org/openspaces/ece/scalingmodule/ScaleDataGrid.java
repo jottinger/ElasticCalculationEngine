@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
-public class ScaleApp {
+public class ScaleDataGrid {
     InputStream in;
     @Parameter(names = {"-l", "--locator"})
     String locator = "127.0.0.1";
@@ -36,16 +36,16 @@ public class ScaleApp {
     GridServiceManager gsm;
     ProcessingUnit pu = null;
 
-    public ScaleApp(InputStream in) {
+    public ScaleDataGrid(InputStream in) {
         this.in = in;
     }
 
     public static void main(String... args) {
-        ScaleApp scaleApp = new ScaleApp(System.in);
-        new JCommander(scaleApp, args);
-        scaleApp.init();
-        scaleApp.run();
-        scaleApp.close();
+        ScaleDataGrid scaleDataGrid = new ScaleDataGrid(System.in);
+        new JCommander(scaleDataGrid, args);
+        scaleDataGrid.init();
+        scaleDataGrid.run();
+        scaleDataGrid.close();
     }
 
     private void close() {
