@@ -67,16 +67,20 @@ public class ScaleWorker {
         System.out.printf("Processing unit (null is acceptable): %s%n", pu);
         if (pu == null) {
             pu = gsm.deploy(new ElasticStatelessProcessingUnitDeployment(processingUnitName)
-                    .memoryCapacityPerContainer(4, MemoryUnit.GIGABYTES)
                             //initial scale
                     .scale(
                             new ManualCapacityScaleConfigurer()
-                                    .numberOfCpuCores(initialWorkers)
+                                    .numberOfCpuCores(1)
                                     .create())
             );
             try {
-                monitorPUScaleProgress(pu, initialWorkers);
+                monitorPUScaleProgress(pu, 1);
             } catch (Exception ignored) {
+            }
+            try {
+                scale(pu, initialWorkers);
+            } catch (Exception e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
         }
     }
