@@ -10,8 +10,8 @@ import org.openspaces.admin.gsm.GridServiceManager;
 import org.openspaces.admin.pu.ProcessingUnit;
 import org.openspaces.admin.pu.ProcessingUnitInstance;
 import org.openspaces.admin.pu.ProcessingUnits;
+import org.openspaces.admin.pu.elastic.ElasticStatelessProcessingUnitDeployment;
 import org.openspaces.admin.pu.elastic.config.ManualCapacityScaleConfigurer;
-import org.openspaces.admin.space.ElasticSpaceDeployment;
 import org.openspaces.core.util.MemoryUnit;
 
 import java.io.InputStream;
@@ -26,11 +26,9 @@ public class ScaleWorker {
     @Parameter(names = {"-g", "--group"})
     String group = "Gigaspaces-XAPPremium-8.0.3-rc";
     @Parameter(names = {"-n", "--name"})
-    String processingUnitName = "ece-datagrid";
+    String processingUnitName = "ece-worker";
     @Parameter(names = {"-m"})
-    Integer memoryCapacity = 512;
-    @Parameter(names = {"-a"})
-    Integer allocationChunk = 256;
+    Integer initialWorkers= 2;
 
     Admin admin;
     GridServiceManager gsm;
@@ -41,11 +39,11 @@ public class ScaleWorker {
     }
 
     public static void main(String... args) {
-        ScaleWorker scaleApp = new ScaleWorker(System.in);
-        new JCommander(scaleApp, args);
-        scaleApp.init();
-        scaleApp.run();
-        scaleApp.close();
+        ScaleWorker scaleWorker = new ScaleWorker(System.in);
+        new JCommander(scaleWorker, args);
+        scaleWorker.init();
+        scaleWorker.run();
+        scaleWorker.close();
     }
 
     private void close() {
@@ -68,74 +66,35 @@ public class ScaleWorker {
         pu = pus.waitFor(processingUnitName, 5, TimeUnit.SECONDS);
         System.out.printf("Processing unit (null is acceptable): %s%n", pu);
         if (pu == null) {
-            pu = gsm.deploy(new ElasticSpaceDeployment(processingUnitName)
-                    .singleMachineDeployment()
-                    .memoryCapacityPerContainer(allocationChunk, MemoryUnit.MEGABYTES)
-                    .maxMemoryCapacity(memoryCapacity * 4, MemoryUnit.MEGABYTES)
-                            //		         .maxNumberOfCpuCores(maxNumberOfCpuCores)
-                    .addContextProperty("cluster-config.groups.group.fail-over-policy.active-election.yield-time", "300")
-                    .addContextProperty("cluster-config.groups.group.fail-over-policy.active-election.fault-detector.invocation-delay", "300")
-                    .addContextProperty("cluster-config.groups.group.fail-over-policy.active-election.fault-detector.retry-count", "2")
-                    .addContextProperty("space-config.proxy-settings.connection-retries", "5")
+            pu = gsm.deploy(new ElasticStatelessProcessingUnitDeployment(processingUnitName)
+                    .memoryCapacityPerContainer(4, MemoryUnit.GIGABYTES)
                             //initial scale
-                    .scale(new ManualCapacityScaleConfigurer().
-                            //	         			numberOfCpuCores(cpuCores)
-                                    memoryCapacity(memoryCapacity, MemoryUnit.MEGABYTES).
-                            create())
+                    .scale(
+                            new ManualCapacityScaleConfigurer()
+                                    .numberOfCpuCores(initialWorkers)
+                                    .create())
             );
             try {
-                monitorPUScaleProgress(pu, memoryCapacity);
+                monitorPUScaleProgress(pu, initialWorkers);
             } catch (Exception ignored) {
             }
         }
     }
 
     void monitorPUScaleProgress(ProcessingUnit pu, int targetCapacity) throws Exception {
-        double bias = targetCapacity / 10; // 10 %
-        double progressPercentage;
+        int totalWorkers=getPUWorkerCount(pu);
 
-        while (true) {
+        while (totalWorkers!=targetCapacity) {
             int totalGSCs = pu.getAdmin().getGridServiceContainers().getSize();
-
-            double currentMemUsageMB = getPUTotalMemoryUtilization(pu);
-            double diff = Math.abs(targetCapacity - currentMemUsageMB);
-            if (currentMemUsageMB >= targetCapacity) {
-                // scale down scenario
-                progressPercentage = (100 * (1 - (diff / currentMemUsageMB)));
-            } else {
-                // scale up scenario
-                progressPercentage = (100 - ((diff / targetCapacity) * 100));
-            }
-            System.out.printf("Total memory used: %3.2fMB - Progress: %3.2f%% - Total Containers: %d%n",
-                    currentMemUsageMB, progressPercentage, totalGSCs);
+            System.out.printf("Target Workers: %d - Total Workers: %d%n", targetCapacity, totalWorkers);
             Thread.sleep(2000);
-            if (currentMemUsageMB > (targetCapacity - bias)
-                    && (currentMemUsageMB < (targetCapacity + bias)))
-                break;
-
-            if (progressPercentage > 95)
-                break;
+            totalWorkers=getPUWorkerCount(pu);
         }
     }
 
-    double getPUTotalMemoryUtilization(ProcessingUnit pu) {
-        HashMap<String, Double> puJVMsSet = new HashMap<String, Double>();
-
-        pu.waitFor(pu.getNumberOfInstances() * 2, 2, TimeUnit.SECONDS);
-        double totalMemoryInMB;
-        ProcessingUnitInstance instances[] = pu.getInstances();
-        for (ProcessingUnitInstance processingUnitInstance : instances) {
-            puJVMsSet.put(processingUnitInstance.getMachine().getHostAddress() +
-                    processingUnitInstance.getVirtualMachine().getDetails().getPid(),
-                    processingUnitInstance.getVirtualMachine().getDetails().
-                            getMemoryHeapMaxInMB());
-        }
-
-        totalMemoryInMB = puJVMsSet.size() * 256;
-
-        return totalMemoryInMB;
+    private int getPUWorkerCount(ProcessingUnit pu) {
+        return pu.getNumberOfInstances();
     }
-
     private void run() {
         Scanner scanner = new Scanner(in);
         String input;
@@ -152,7 +111,7 @@ public class ScaleWorker {
             boolean scale = handleChangeRequest(input);
             try {
                 if (scale) {
-                    scale(pu, memoryCapacity, MemoryUnit.MEGABYTES);
+                    scale(pu, initialWorkers);
                 }
             } catch (Exception ignored) {
             }
@@ -162,13 +121,11 @@ public class ScaleWorker {
     private boolean handleChangeRequest(String input) {
         boolean scale = true;
         if (input.equals("+")) {
-            if (memoryCapacity < memoryCapacity * 4) {
-                memoryCapacity += allocationChunk;
-            }
+            initialWorkers++;
         } else {
             if (input.equals("-")) {
-                if (memoryCapacity > allocationChunk * 2) {
-                    memoryCapacity -= allocationChunk;
+                if (initialWorkers>1) {
+                    initialWorkers--;
                 }
             } else {
                 scale = false;
@@ -177,19 +134,20 @@ public class ScaleWorker {
         return scale;
     }
 
-    void scale(ProcessingUnit pu, int targetMemoryCapacity, MemoryUnit memUnit) throws Exception {
+    void scale(ProcessingUnit pu, int targetCapacity) throws Exception {
         long startTime;
         // checking deployed PU.
-        System.out.printf("scaling datagrid capacity from %4g MB to %4d MB%n",
-                getPUTotalMemoryUtilization(pu), memoryCapacity);
+        System.out.printf("scaling worker nodes from from %4d to %4d%n",
+                getPUWorkerCount(pu), targetCapacity);
         startTime = System.currentTimeMillis();
-        pu.scale(new ManualCapacityScaleConfigurer()
-                .memoryCapacity(targetMemoryCapacity, memUnit)
-                .create());
+        if(getPUWorkerCount(pu)>targetCapacity) {
+            pu.decrementInstance();
+        } else {
+            pu.incrementInstance();
+        }
 
-        monitorPUScaleProgress(pu, targetMemoryCapacity);
         long endTime = System.currentTimeMillis();
-        System.out.printf("Data-Grid Memory capacity change done!%nTime to scale system: %f seconds%n", (endTime - startTime) / 1000.0);
+        System.out.printf("Worker capacity change done!%nTime to scale system: %f seconds%n", (endTime - startTime) / 1000.0);
 
     }
 }

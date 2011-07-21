@@ -54,7 +54,7 @@ containers exist.)
 
 You can run the Scaling Module like so:
 
-   java $OPTIONS org.openspaces.ece.scalingmodule.ScaleApp
+   java $OPTIONS org.openspaces.ece.scalingmodule.ScaleDataGrid
 
 If the ESM does not have an instance of the ece-datagrid processing unit active
 (which will be the case on a cold restart), this application will deploy and
