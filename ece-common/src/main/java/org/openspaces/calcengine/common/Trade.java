@@ -1,6 +1,7 @@
 package org.openspaces.calcengine.common;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import com.gigaspaces.annotation.pojo.*;
 
@@ -10,7 +11,7 @@ public class Trade implements Serializable{
 	public Trade (){}
 	private Integer id;
 	private Double NPV;
-	private CacheFlowData cacheFlowData;
+	private CashFlowData cashFlowData;
 	
 	@SpaceRouting
 	@SpaceId (autoGenerate = false)
@@ -34,16 +35,19 @@ public class Trade implements Serializable{
 		NPV = nPV;
 	}
 
-	public CacheFlowData getCacheFlowData() {
-		if (cacheFlowData == null )
-			return new CacheFlowData ();
+	public CashFlowData getCashFlowData() {
+		if (cashFlowData == null )
+			return new CashFlowData();
 		
-		return cacheFlowData;
+		return cashFlowData;
 	}
 
-	public void setCacheFlowData(CacheFlowData cacheFlowData) {
-		this.cacheFlowData = cacheFlowData;
+	public void setCashFlowData(CashFlowData cashFlowData) {
+		this.cashFlowData = cashFlowData;
 	}
 
-
+    public void setCashFlowData(double[] cashFlow) {
+        CashFlowData data=new CashFlowData(cashFlow);
+        setCashFlowData(data);
+    }
 }

@@ -15,6 +15,7 @@
         <module>ece-worker</module>
         <module>ece-scalingmodule</module>
         <module>ece-client</module>
+        <module>ece-mirror</module>
     </modules>
 
     <properties>

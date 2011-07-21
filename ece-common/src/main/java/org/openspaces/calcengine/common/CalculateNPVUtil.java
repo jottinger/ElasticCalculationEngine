@@ -4,19 +4,22 @@ import com.gigaspaces.client.ReadByIdsResult;
 import org.openspaces.core.GigaSpace;
 
 import java.util.*;
+import java.util.concurrent.locks.LockSupport;
+import java.util.logging.Logger;
 
 public class CalculateNPVUtil {
+    static Logger logger = Logger.getLogger(CalculateNPVUtil.class.getName());
 
     //calculate Net present value for the last 6 years - http://en.wikipedia.org/wiki/Net_present_value
     static public void calculateNPV(double rate, Trade trade) {
         double disc = 1.0 / (1.0 + rate / 100);
-        CacheFlowData cf = trade.getCacheFlowData();
-        double NPV = (cf.getCacheFlowYear0() +
-                disc * (cf.getCacheFlowYear1() +
-                        disc * (cf.getCacheFlowYear2() +
-                                disc * (cf.getCacheFlowYear3() +
-                                        disc * (cf.getCacheFlowYear4() +
-                                                disc * cf.getCacheFlowYear5())))));
+        CashFlowData cf = trade.getCashFlowData();
+        double NPV = (cf.getCashFlowYear0() +
+                disc * (cf.getCashFlowYear1() +
+                        disc * (cf.getCashFlowYear2() +
+                                disc * (cf.getCashFlowYear3() +
+                                        disc * (cf.getCashFlowYear4() +
+                                                disc * cf.getCashFlowYear5())))));
         trade.setNPV(NPV);
     }
 
@@ -29,16 +32,10 @@ public class CalculateNPVUtil {
     static public Trade[] getTradesFromDB(ArrayList<Integer> missingIDs, GigaSpace gigaspace) {
         Trade[] trades = new Trade[missingIDs.size()];
         int i = 0;
-        for (Iterator<Integer> iterator = missingIDs.iterator(); iterator.hasNext(); ) {
-            Integer id = iterator.next();
-            trades[i] = generateTrade(id);
+        for(Integer id:missingIDs) {
+            trades[i]=generateTrade(id);
             i++;
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
+            LockSupport.parkNanos(10*1000000); // 1 milli = 1000000 nanoseconds.
         }
         gigaspace.writeMultiple(trades);
         return trades;
@@ -62,7 +59,7 @@ public class CalculateNPVUtil {
             }
             Trade missingTrades[] = null;
             if (missingIDs.size() > 0) {
-                System.out.println(">>>> Partition:" + partitionID + " - Loading missing Trades from the database for IDs:" + missingIDs);
+                logger.fine(">>>> Partition:" + partitionID + " - Loading missing Trades from the database for IDs:" + missingIDs);
                 missingTrades = getTradesFromDB(missingIDs, gigaspace);
             }
 
@@ -102,14 +99,14 @@ public class CalculateNPVUtil {
     static public Trade generateTrade(int id) {
         Trade trade = new Trade();
         trade.setId(id);
-        CacheFlowData cf = new CacheFlowData();
-        cf.setCacheFlowYear0((double) (id * -100));
-        cf.setCacheFlowYear1((double) (id * 20));
-        cf.setCacheFlowYear2((double) (id * 40));
-        cf.setCacheFlowYear3((double) (id * 60));
-        cf.setCacheFlowYear4((double) (id * 80));
-        cf.setCacheFlowYear5((double) (id * 100));
-        trade.setCacheFlowData(cf);
+        CashFlowData cf = new CashFlowData();
+        cf.setCashFlowYear0((double) (id * -100));
+        cf.setCashFlowYear1((double) (id * 20));
+        cf.setCashFlowYear2((double) (id * 40));
+        cf.setCashFlowYear3((double) (id * 60));
+        cf.setCashFlowYear4((double) (id * 80));
+        cf.setCashFlowYear5((double) (id * 100));
+        trade.setCashFlowData(cf);
         return trade;
     }
 
