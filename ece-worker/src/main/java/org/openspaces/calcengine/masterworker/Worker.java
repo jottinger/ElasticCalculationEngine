@@ -31,15 +31,15 @@ public class Worker implements ClusterInfoAware {
     GigaSpace gigaspaceLocalCache;
 
     public void setClusterInfo(ClusterInfo clusterInfo) {
-        logger.info("--------------- > setClusterInfo called");
+        logger.severe("--------------- > setClusterInfo called");
         if (clusterInfo != null) {
             workerID = clusterInfo.getInstanceId();
-            logger.info("--------------- > Worker " + workerID + " started");
+            logger.severe("--------------- > Worker " + workerID + " started");
         }
     }
 
     public Worker() {
-        logger.info("-- > Creating Worker");
+        logger.severe("-- > Creating Worker");
     }
 
     @EventTemplate

@@ -15,9 +15,11 @@ To deploy the datagrid, there are three steps:
    1. Build
       mvn package
    2. Start an instance of XAP
-      gs-agent gsa.gsc 4
+      * Windows: gs-agent gsa.gsc 4
+      * UNIX   : gs-agent.sh gsa.gsc 4
    3. Deploy the datagrid
-      gs deploy ece-datagrid/target/ece-datagrid.jar
+      * Windows: gs deploy ece-datagrid/target/ece-datagrid.jar
+      * UNIX   : gs.sh deploy ece-datagrid/target/ece-datagrid.jar
 
 Now you can start the ece-client application. Assume the classpath has been set.
 
@@ -25,9 +27,13 @@ To use the Executor-based mechanism:
 
    java $OPTIONS org.openspaces.ece.client.ConsoleClient -type executor
 
-To use the Master/Worker mechanism:
+To use the Master/Worker mechanism, there are two steps:
 
-   java $OPTIONS org.openspaces.ece.client.ConsoleClient -type masterworker
+   1. Deploy the worker module
+      * Windows: gs deploy ece-worker/target/ece-worker.jar
+      * UNIX   : gs.sh deploy ece-worker/target/ece-worker.jar
+   2. Run the client that initiates trades
+      java $OPTIONS org.openspaces.ece.client.ConsoleClient -type masterworker
 
 The scaling module allows dynamic configuration of a datagrid. Normally, the scaling
 will be done in response to datagrid configuration and load, but this app demonstrates

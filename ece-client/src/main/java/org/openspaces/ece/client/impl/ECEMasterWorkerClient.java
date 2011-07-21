@@ -17,6 +17,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -46,6 +47,7 @@ public class ECEMasterWorkerClient implements ECEClient, ProcessingUnitInstanceL
         this.maxTrades = maxTrades;
     }
 
+
     @Override
     public int getMaxIterations() {
         return maxIterations;
@@ -60,11 +62,20 @@ public class ECEMasterWorkerClient implements ECEClient, ProcessingUnitInstanceL
     int maxIterations = 100;
 
     public ECEMasterWorkerClient() {
-        Admin admin = new AdminFactory().createAdmin();
-        workerPU = admin.getProcessingUnits().waitFor("worker", 5, TimeUnit.SECONDS);
+        Admin admin = new AdminFactory().addGroup("Gigaspaces-XAPPremium-8.0.3-rc").addLocator("127.0.0.1").createAdmin();
+        System.out.println(Arrays.toString(admin.getVirtualMachines().getVirtualMachines()));
+        workersCount = 0;
+        System.out.println(admin.getProcessingUnits().getNames());
+        workerPU = admin.getProcessingUnits().waitFor("ece-worker", 5, TimeUnit.SECONDS);
         if (workerPU != null) {
+            System.out.println(workerPU);
             workerPU.addLifecycleListener(this);
             workersCount = workerPU.getNumberOfInstances();
+        } else {
+            System.out.println("No workers found; is this intentional? Master/Worker exiting.");
+            admin.close();
+            System.exit(1);
+
         }
     }
 

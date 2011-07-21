@@ -12,13 +12,13 @@
        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
        http://www.openspaces.org/schema/events http://www.openspaces.org/schema/events/openspaces-events.xsd
        http://www.openspaces.org/schema/remoting http://www.openspaces.org/schema/remoting/openspaces-remoting.xsd">
-
 	<tx:annotation-driven transaction-manager="transactionManager"/>
 
 	<os-core:distributed-tx-manager id="transactionManager" />
 
 	<!-- Enable support for @Polling annotation -->
 	<os-events:annotation-support />
+    <bean id="workerBean" class="org.openspaces.calcengine.masterworker.Worker" />
 
 	<os-core:space id="space" url="jini://*/*/CalcDataGrid" />
 	<os-core:giga-space id="gigaSpace" space="space"  tx-manager="transactionManager" />

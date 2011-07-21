@@ -1,162 +1,144 @@
 package org.openspaces.calcengine.common;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import com.gigaspaces.client.ReadByIdsResult;
 import org.openspaces.core.GigaSpace;
 
-import com.gigaspaces.client.ReadByIdsResult;
-import com.j_spaces.core.client.SpaceURL;
+import java.util.*;
 
 public class CalculateNPVUtil {
 
-	//calculate Net present value for the last 6 years - http://en.wikipedia.org/wiki/Net_present_value
-	static public void calculateNPV(double rate , Trade trade) {
-	    double disc = 1.0/(1.0+rate/100);
-	    CacheFlowData cf =  trade.getCacheFlowData();
-	    double NPV = (cf.getCacheFlowYear0() + 
-	    		disc*(cf.getCacheFlowYear1() + 
-	    		disc*(cf.getCacheFlowYear2() + 
-	    		disc*(cf.getCacheFlowYear3() + 
-	    		disc*(cf.getCacheFlowYear4() + 
-	    		disc*cf.getCacheFlowYear5())))));
-	    trade.setNPV(NPV);
-	}
-	
-	static public void runAnalysis(List<Trade> trades, double rate){
-		for(Trade t: trades){
-			calculateNPV(rate,t);
-		}
-	}
+    //calculate Net present value for the last 6 years - http://en.wikipedia.org/wiki/Net_present_value
+    static public void calculateNPV(double rate, Trade trade) {
+        double disc = 1.0 / (1.0 + rate / 100);
+        CacheFlowData cf = trade.getCacheFlowData();
+        double NPV = (cf.getCacheFlowYear0() +
+                disc * (cf.getCacheFlowYear1() +
+                        disc * (cf.getCacheFlowYear2() +
+                                disc * (cf.getCacheFlowYear3() +
+                                        disc * (cf.getCacheFlowYear4() +
+                                                disc * cf.getCacheFlowYear5())))));
+        trade.setNPV(NPV);
+    }
 
-	static public Trade[] getTradesFromDB(ArrayList<Integer> missingIDs, GigaSpace gigaspace )
-	{
-		Trade[] trades = new Trade[missingIDs.size()];
-		int i = 0;
-		for (Iterator<Integer> iterator = missingIDs.iterator(); iterator.hasNext();) {
-			Integer id = iterator.next();
-			trades [i] = generateTrade(id);
-			i++;
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+    static public void runAnalysis(List<Trade> trades, double rate) {
+        for (Trade t : trades) {
+            calculateNPV(rate, t);
+        }
+    }
 
-		}
-		gigaspace.writeMultiple(trades);
-		return trades;
-	}
+    static public Trade[] getTradesFromDB(ArrayList<Integer> missingIDs, GigaSpace gigaspace) {
+        Trade[] trades = new Trade[missingIDs.size()];
+        int i = 0;
+        for (Iterator<Integer> iterator = missingIDs.iterator(); iterator.hasNext(); ) {
+            Integer id = iterator.next();
+            trades[i] = generateTrade(id);
+            i++;
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
-	static public HashMap<String, Double> execute(GigaSpace gigaspace , Integer tradeIds[] , int partitionID , double rate) throws Exception {
+        }
+        gigaspace.writeMultiple(trades);
+        return trades;
+    }
 
-		HashMap<String, Double> rtnVal = new HashMap<String, Double>();
+    static public HashMap<String, Double> execute(GigaSpace gigaspace, Integer tradeIds[], int partitionID, double rate) throws Exception {
 
-		List<Trade> tradesList = new ArrayList<Trade>();
-		try {
-			ReadByIdsResult<Trade> res = gigaspace.readByIds(Trade.class, tradeIds);
-			
-			// checking for null results and getting missing Trades objects from external Data source
-			Trade resArr[] = res.getResultsArray();
-			ArrayList<Integer> missingIDs = new ArrayList<Integer>();
-			for (int i = 0; i < resArr.length; i++) {
-				if (resArr [i] == null)
-				{
-					missingIDs.add(tradeIds[i]);
-				}
-			}
-			Trade missingTrades[] = null;
-			if (missingIDs.size() > 0)
-			{
-				System.out.println(">>>> Partition:"+ partitionID + " - Loading missing Trades from the database for IDs:"+missingIDs);
-				missingTrades = getTradesFromDB(missingIDs,gigaspace);
-			}
+        HashMap<String, Double> rtnVal = new HashMap<String, Double>();
 
-			Iterator<Trade> iter = res.iterator();
-			// ReadByIdsResult - Holds iterable results of the readByIds operation. 
-			// When iterating through the results, null values are skipped. 
-			// If you want to access null values, use the getResultsArray() method. 
-			// Results are ordered based on the list of Ids provided to the readByIds method.
-			while (iter.hasNext())
-			{
-				tradesList.add(iter.next());
-			}
-			
-			if (missingTrades!=null)
-			{
-				for (int i = 0; i < missingTrades.length; i++) {
-					tradesList.add(missingTrades[i]);
-				}
-			}
-		} catch (Exception e){
-			String a = e.getMessage();
-			System.out.println(a);
-			e.printStackTrace();
-		}
-		runAnalysis(tradesList,rate);
-		
-		for(Trade t : tradesList){
-			String key = t.getBook();
-			if ( rtnVal.containsKey(key)){
-				rtnVal.put(key, rtnVal.get(key)+t.getNPV());
-			} else {
-				rtnVal.put(key,t.getNPV());
-			}
-		}
-		return rtnVal;
-	}
+        List<Trade> tradesList = new ArrayList<Trade>();
+        try {
+            ReadByIdsResult<Trade> res = gigaspace.readByIds(Trade.class, tradeIds);
 
-	// creating a trade
-	static public Trade generateTrade(int id)
-	{
-		Trade trade = new Trade();
-		trade.setId(id);
-		CacheFlowData cf = new CacheFlowData();
-		cf.setCacheFlowYear0((double)(id * -100));
-		cf.setCacheFlowYear1((double)(id * 20));
-		cf.setCacheFlowYear2((double)(id * 40));
-		cf.setCacheFlowYear3((double)(id * 60));
-		cf.setCacheFlowYear4((double)(id * 80));
-		cf.setCacheFlowYear5((double)(id * 100));
-		trade.setCacheFlowData(cf);
-		return trade;
-	}
+            // checking for null results and getting missing Trades objects from external Data source
+            Trade resArr[] = res.getResultsArray();
+            ArrayList<Integer> missingIDs = new ArrayList<Integer>();
+            for (int i = 0; i < resArr.length; i++) {
+                if (resArr[i] == null) {
+                    missingIDs.add(tradeIds[i]);
+                }
+            }
+            Trade missingTrades[] = null;
+            if (missingIDs.size() > 0) {
+                System.out.println(">>>> Partition:" + partitionID + " - Loading missing Trades from the database for IDs:" + missingIDs);
+                missingTrades = getTradesFromDB(missingIDs, gigaspace);
+            }
 
-	// splitting the IDs into chunks
-	static public HashMap<Integer , HashSet<Integer>> splitIDs(Integer[] ids , int partitionCount)
-	{
-		HashMap<Integer , HashSet<Integer>> routings = new HashMap<Integer , HashSet<Integer>> ();
-		for (Integer id: ids) {
-			int partition = (id % partitionCount);
-			HashSet<Integer> partitionIDS = null;
-			if (routings.containsKey(partition))
-			{
-				partitionIDS  = routings.get(partition);
-			}
-			else
-			{
-				partitionIDS = new HashSet<Integer>();
-			}
-			partitionIDS.add(id); 
-			routings.put(partition, partitionIDS);
-		}
-		return routings ;
-	}
+            Iterator<Trade> iter = res.iterator();
+            // ReadByIdsResult - Holds iterable results of the readByIds operation.
+            // When iterating through the results, null values are skipped.
+            // If you want to access null values, use the getResultsArray() method.
+            // Results are ordered based on the list of Ids provided to the readByIds method.
+            while (iter.hasNext()) {
+                tradesList.add(iter.next());
+            }
 
-	static public void subreducer(Map<String, Double> aggregatedNPVCalc, Map<String, Double> incPositions){
-		for (String key : incPositions.keySet())
-		{
-			if (aggregatedNPVCalc.containsKey(key)){
-				double currentNPV = aggregatedNPVCalc.get(key);
-				aggregatedNPVCalc.put(key, currentNPV + incPositions.get(key));
-			} else {
-				aggregatedNPVCalc.put(key, incPositions.get(key));
-			}
-		}
-	}
+            if (missingTrades != null) {
+                for (int i = 0; i < missingTrades.length; i++) {
+                    tradesList.add(missingTrades[i]);
+                }
+            }
+        } catch (Exception e) {
+            String a = e.getMessage();
+            System.out.println(a);
+            e.printStackTrace();
+        }
+        runAnalysis(tradesList, rate);
+
+        for (Trade t : tradesList) {
+            String key = t.getBook();
+            if (rtnVal.containsKey(key)) {
+                rtnVal.put(key, rtnVal.get(key) + t.getNPV());
+            } else {
+                rtnVal.put(key, t.getNPV());
+            }
+        }
+        return rtnVal;
+    }
+
+    // creating a trade
+    static public Trade generateTrade(int id) {
+        Trade trade = new Trade();
+        trade.setId(id);
+        CacheFlowData cf = new CacheFlowData();
+        cf.setCacheFlowYear0((double) (id * -100));
+        cf.setCacheFlowYear1((double) (id * 20));
+        cf.setCacheFlowYear2((double) (id * 40));
+        cf.setCacheFlowYear3((double) (id * 60));
+        cf.setCacheFlowYear4((double) (id * 80));
+        cf.setCacheFlowYear5((double) (id * 100));
+        trade.setCacheFlowData(cf);
+        return trade;
+    }
+
+    // splitting the IDs into chunks
+    static public HashMap<Integer, HashSet<Integer>> splitIDs(Integer[] ids, int partitionCount) {
+        HashMap<Integer, HashSet<Integer>> routings = new HashMap<Integer, HashSet<Integer>>();
+        for (Integer id : ids) {
+            int partition = (partitionCount == 1) ? id : (id % partitionCount);
+            HashSet<Integer> partitionIDS = null;
+            if (routings.containsKey(partition)) {
+                partitionIDS = routings.get(partition);
+            } else {
+                partitionIDS = new HashSet<Integer>();
+            }
+            partitionIDS.add(id);
+            routings.put(partition, partitionIDS);
+        }
+        return routings;
+    }
+
+    static public void subreducer(Map<String, Double> aggregatedNPVCalc, Map<String, Double> incPositions) {
+        for (String key : incPositions.keySet()) {
+            if (aggregatedNPVCalc.containsKey(key)) {
+                double currentNPV = aggregatedNPVCalc.get(key);
+                aggregatedNPVCalc.put(key, currentNPV + incPositions.get(key));
+            } else {
+                aggregatedNPVCalc.put(key, incPositions.get(key));
+            }
+        }
+    }
 
 }
