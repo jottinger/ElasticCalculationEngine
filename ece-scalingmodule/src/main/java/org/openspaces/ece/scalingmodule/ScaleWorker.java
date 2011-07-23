@@ -8,14 +8,11 @@ import org.openspaces.admin.esm.ElasticServiceManagers;
 import org.openspaces.admin.gsa.GridServiceAgents;
 import org.openspaces.admin.gsm.GridServiceManager;
 import org.openspaces.admin.pu.ProcessingUnit;
-import org.openspaces.admin.pu.ProcessingUnitInstance;
 import org.openspaces.admin.pu.ProcessingUnits;
 import org.openspaces.admin.pu.elastic.ElasticStatelessProcessingUnitDeployment;
 import org.openspaces.admin.pu.elastic.config.ManualCapacityScaleConfigurer;
-import org.openspaces.core.util.MemoryUnit;
 
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
@@ -28,7 +25,7 @@ public class ScaleWorker {
     @Parameter(names = {"-n", "--name"})
     String processingUnitName = "ece-worker";
     @Parameter(names = {"-m"})
-    Integer initialWorkers= 2;
+    Integer initialWorkers = 2;
 
     Admin admin;
     GridServiceManager gsm;
@@ -67,7 +64,7 @@ public class ScaleWorker {
         System.out.printf("Processing unit (null is acceptable): %s%n", pu);
         if (pu == null) {
             pu = gsm.deploy(new ElasticStatelessProcessingUnitDeployment(processingUnitName)
-                            //initial scale
+                    //initial scale
                     .scale(
                             new ManualCapacityScaleConfigurer()
                                     .numberOfCpuCores(1)
@@ -86,19 +83,20 @@ public class ScaleWorker {
     }
 
     void monitorPUScaleProgress(ProcessingUnit pu, int targetCapacity) throws Exception {
-        int totalWorkers=getPUWorkerCount(pu);
+        int totalWorkers = getPUWorkerCount(pu);
 
-        while (totalWorkers!=targetCapacity) {
+        while (totalWorkers != targetCapacity) {
             int totalGSCs = pu.getAdmin().getGridServiceContainers().getSize();
             System.out.printf("Target Workers: %d - Total Workers: %d%n", targetCapacity, totalWorkers);
             Thread.sleep(2000);
-            totalWorkers=getPUWorkerCount(pu);
+            totalWorkers = getPUWorkerCount(pu);
         }
     }
 
     private int getPUWorkerCount(ProcessingUnit pu) {
         return pu.getNumberOfInstances();
     }
+
     private void run() {
         Scanner scanner = new Scanner(in);
         String input;
@@ -128,7 +126,7 @@ public class ScaleWorker {
             initialWorkers++;
         } else {
             if (input.equals("-")) {
-                if (initialWorkers>1) {
+                if (initialWorkers > 1) {
                     initialWorkers--;
                 }
             } else {
@@ -144,7 +142,7 @@ public class ScaleWorker {
         System.out.printf("scaling worker nodes from from %4d to %4d%n",
                 getPUWorkerCount(pu), targetCapacity);
         startTime = System.currentTimeMillis();
-        if(getPUWorkerCount(pu)>targetCapacity) {
+        if (getPUWorkerCount(pu) > targetCapacity) {
             pu.decrementInstance();
         } else {
             pu.incrementInstance();
