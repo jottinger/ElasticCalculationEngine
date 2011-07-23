@@ -8,16 +8,7 @@
 #
 # To use the ESM mode, add the -esm parameter.
 
-# Check to see if path conversion is needed
-toNative() {
-    # Check for Cygwin
-    case $OS in
-        Windows*)
-           toWindows "$@";;
-           *) echo $* ;;
-    esac
-}
-echo $GSHOME
+# echo $GSHOME
 
 if [ ! -n "$GSHOME" ] ; then
     echo Environment variable GSHOME not defined.
@@ -25,16 +16,33 @@ if [ ! -n "$GSHOME" ] ; then
     exit 1
 fi
 
+if [ "$1" = "-help" ] ; then
+    echo This script starts the GS-Agent for the ElasticCalculationEngine demonstrations.
+    echo 
+    echo It is able to start two types of GS-Agents:
+    echo     1. A normal, statically-allocated Agent with four GSCs
+    echo     2. An elastic Agent with no GSCs but an Elastic Service Manager
+    echo
+    echo The static allocation mode is the default.
+    echo 
+    echo To invoke the Elastic mode, add -esm as an argument to the script.
+    echo
+    exit 0
+fi
+
 # invoke GS environment
-pushd $GSHOME/bin
+pushd $GSHOME/bin > /dev/null
 . ./setenv.sh
 
 ARGS="gsa.gsc 4"
 if [ "$1" = "-esm" ] ; then
    echo ESM MODE
-   ARGS=gsa.global.esm 1 gsa.gsc 0 gsa.global.gsm 2 gsa.global.lus 2
+   ARGS="gsa.global.esm 1 gsa.gsc 0 gsa.global.gsm 2 gsa.global.lus 2"
 fi
 
+echo Starting GS-Agent with arguments $ARGS
+sleep 4
 . ./gs-agent.sh $ARGS
-popd
+popd > /dev/null
 
+exit 0
