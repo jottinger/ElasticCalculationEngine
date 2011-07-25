@@ -13,4 +13,4 @@ fi
 #   export SEPARATOR=:
 #done
 
-java -cp "$GSHOME/lib/required/*":../ece-client/target/classes org.openspaces.ece.client.ConsoleClient
+java -cp "$GSHOME/lib/required/*":../ece-client/target/classes org.openspaces.ece.client.ConsoleClient $@
