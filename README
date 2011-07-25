@@ -16,7 +16,7 @@ To deploy the datagrid, there are three steps:
       mvn package
    2. Start an instance of XAP
       * Windows: gs-agent gsa.gsc 4
-      * UNIX   : gs-agent.sh gsa.gsc 4
+      * UNIX   : ./scripts/agentStart.sh
    3. Deploy the datagrid
       * Windows: gs deploy ece-datagrid/target/ece-datagrid.jar
       * UNIX   : gs.sh deploy ece-datagrid/target/ece-datagrid.jar
@@ -44,7 +44,8 @@ To use it, you must have an instance of XAP with the Elastic Service Manager run
 If you are using the gs-agent line from the earlier example, shut down the gs-agent
 and restart it with:
 
-   gs-agent gsa.global.esm 1 gsa.gsc 0 gsa.global.gsm 2 gsa.global.lus 2
+   * Windows: gs-agent gsa.global.esm 1 gsa.gsc 0 gsa.global.gsm 2 gsa.global.lus 2
+   * UNIX   : ./scripts/agentStart.sh -esm
 
 This will create an instance of the Elastic Service Manager as well as instances of
 the GigaSpaces Manager container and the Lookup Service. (It will configure no more
