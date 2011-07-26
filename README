@@ -34,7 +34,8 @@ To use the Master/Worker mechanism, there are two steps:
       * Windows: gs deploy ece-worker/target/ece-worker.jar
       * UNIX   : gs.sh deploy ece-worker/target/ece-worker.jar
    2. Run the client that initiates trades
-      java $OPTIONS org.openspaces.ece.client.ConsoleClient -type masterworker
+      * UNIX   : scripts/client.sh -type executor
+      * Windows: scripts/client -type executor
 
 The scaling module allows dynamic configuration of a datagrid. Normally, the scaling
 will be done in response to datagrid configuration and load, but this app demonstrates

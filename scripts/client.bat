@@ -11,6 +11,6 @@ goto :exit
 set GSCLASSPATH=%GSHOME%\lib\required\*
 set BASECLASSPATH=%~dp0..\ece-client\target\ece-client-1.0.jar
 echo %BASECLASSPATH% 
-java -cp "%GSCLASSPATH%;%BASECLASSPATH%" org.openspaces.ece.client.ConsoleClient
+java -cp "%GSCLASSPATH%;%BASECLASSPATH%" org.openspaces.ece.client.ConsoleClient %*
 
 :exit
