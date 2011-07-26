@@ -21,11 +21,12 @@ To deploy the datagrid, there are three steps:
       * Windows: gs deploy ece-datagrid/target/ece-datagrid.jar
       * UNIX   : gs.sh deploy ece-datagrid/target/ece-datagrid.jar
 
-Now you can start the ece-client application. Assume the classpath has been set.
+Now you can start the ece-client application.
 
 To use the Executor-based mechanism:
 
-   java $OPTIONS org.openspaces.ece.client.ConsoleClient -type executor
+* UNIX   : scripts/client.sh -type executor
+* Windows: scripts/client -type executor
 
 To use the Master/Worker mechanism, there are two steps:
 
