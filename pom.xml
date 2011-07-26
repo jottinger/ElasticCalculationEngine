@@ -21,7 +21,7 @@
     <properties>
         <gsVersion>8.0.3-rc</gsVersion>
         <springVersion>3.0.5.RELEASE</springVersion>
-        <testngVersion>6.0.1</testngVersion>
+        <testngVersion>6.1.1</testngVersion>
     </properties>
 
     <dependencies>

@@ -34,8 +34,8 @@ To use the Master/Worker mechanism, there are two steps:
       * Windows: gs deploy ece-worker/target/ece-worker.jar
       * UNIX   : gs.sh deploy ece-worker/target/ece-worker.jar
    2. Run the client that initiates trades
-      * UNIX   : scripts/client.sh -type executor
-      * Windows: scripts/client -type executor
+      * UNIX   : scripts/client.sh
+      * Windows: scripts/client
 
 The scaling module allows dynamic configuration of a datagrid. Normally, the scaling
 will be done in response to datagrid configuration and load, but this app demonstrates
@@ -47,7 +47,7 @@ If you are using the gs-agent line from the earlier example, shut down the gs-ag
 and restart it with:
 
    * Windows: gs-agent gsa.global.esm 1 gsa.gsc 0 gsa.global.gsm 2 gsa.global.lus 2
-   * UNIX   : ./scripts/agentStart.sh -esm
+   * UNIX   : gs-agent.sh gsa.global.esm 1 gsa.gsc 0 gsa.global.gsm 2 gsa.global.lus 2
 
 This will create an instance of the Elastic Service Manager as well as instances of
 the GigaSpaces Manager container and the Lookup Service. (It will configure no more
