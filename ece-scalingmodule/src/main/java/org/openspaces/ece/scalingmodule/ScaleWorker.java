@@ -63,11 +63,12 @@ public class ScaleWorker {
         pu = pus.waitFor(processingUnitName, 5, TimeUnit.SECONDS);
         System.out.printf("Processing unit (null is acceptable): %s%n", pu);
         if (pu == null) {
+
             pu = gsm.deploy(new ElasticStatelessProcessingUnitDeployment(processingUnitName)
                     //initial scale
                     .scale(
                             new ManualCapacityScaleConfigurer()
-                                    .numberOfCpuCores(1)
+                                    // .numberOfCpuCores(1)
                                     .create())
             );
             try {
@@ -80,7 +81,7 @@ public class ScaleWorker {
                 e.printStackTrace();
             }
         } else {
-            initialWorkers=getPUWorkerCount(pu);
+            initialWorkers = getPUWorkerCount(pu);
         }
     }
 
@@ -131,7 +132,7 @@ public class ScaleWorker {
                 if (initialWorkers > 1) {
                     initialWorkers--;
                 } else {
-                    scale=false;
+                    scale = false;
                 }
             } else {
                 scale = false;

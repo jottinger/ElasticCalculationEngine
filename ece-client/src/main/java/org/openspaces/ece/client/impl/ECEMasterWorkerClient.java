@@ -17,6 +17,7 @@ import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -87,14 +88,15 @@ public class ECEMasterWorkerClient extends AbstractECEClient {
             ids[i] = i;
         }
 
-        for (double rate:rates) {
+        for (double rate : rates) {
             for (int i = 0; i < getMaxIterations(); i++) {
                 // Mapping IDs to worker
                 HashMap<Integer, HashSet<Integer>> partitionIDSDistro = CalculateNPVUtil.splitIDs(ids, workersCount);
                 long startTime = System.currentTimeMillis();
                 logger.info("--> Executing Job " + i + " with " + workersCount + " workers");
-                execute(i, partitionIDSDistro, rate);
-                reduce(i, partitionIDSDistro.size());
+                if (execute(i, partitionIDSDistro, rate)) {
+                    reduce(i, partitionIDSDistro.size());
+                }
                 long endTime = System.currentTimeMillis();
                 logger.info("--> Time to Execute Job " + i + " - " + (endTime - startTime) + "ms\n");
                 try {
@@ -122,8 +124,8 @@ public class ECEMasterWorkerClient extends AbstractECEClient {
             if (results.length > 0) {
                 count = count + results.length;
                 // aggregate the results into books
-                for (Result result:results) { //int i = 0; i < results.length; i++) {
-                    HashMap<String, Double> incPositions = result.getResultData();
+                for (int i = 0; i < results.length; i++) {
+                    HashMap<String, Double> incPositions = results[i].getResultData();
                     CalculateNPVUtil.subreducer(aggregatedNPVCalc, incPositions);
                 }
             }
@@ -142,32 +144,48 @@ public class ECEMasterWorkerClient extends AbstractECEClient {
                 e.printStackTrace();
             }
         }
-        ptm.commit(status);
-        for (String key : aggregatedNPVCalc.keySet()) {
-            logger.info("Book = " + key + ", NPV = " + formatter.format(aggregatedNPVCalc.get(key)));
-        }
 
+        try {
+            ptm.commit(status);
+            for (String key : aggregatedNPVCalc.keySet()) {
+                logger.info("Book = " + key + ", NPV = " + formatter.format(aggregatedNPVCalc.get(key)));
+            }
+        } catch (Exception e) {
+            if (!status.isCompleted())
+                ptm.rollback(status);
+        }
     }
 
-    public void execute(int jobId, HashMap<Integer, HashSet<Integer>> partitionIDSDistro, double rate) {
-        Request requests[] = new Request[partitionIDSDistro.size()];
+    public boolean execute(int jobId, HashMap<Integer, HashSet<Integer>> partitionIDSDistro, double rate) {
+        TransactionStatus status = null;
+        try {
+            Request requests[] = new Request[partitionIDSDistro.size()];
 
-        int i = 0;
-        for(Integer key:partitionIDSDistro.keySet()) {
-            HashSet<Integer> ids = partitionIDSDistro.get(key);
-            requests[i] = new Request();
-            requests[i].setJobID(jobId);
-            requests[i].setTaskID(jobId + "_" + i);
-            requests[i].setRouting(i % workersCount);
-            requests[i].setRate(rate);
-            Integer[] ids_ = new Integer[ids.size()];
-            ids.toArray(ids_);
-            requests[i].setTradeIds(ids_);
-            i++;
+            Iterator<Integer> iterator = partitionIDSDistro.keySet().iterator();
+            int i = 0;
+            while (iterator.hasNext()) {
+                int key = iterator.next();
+                HashSet<Integer> ids = partitionIDSDistro.get(key);
+                requests[i] = new Request();
+                requests[i].setJobID(jobId);
+                requests[i].setTaskID(jobId + "_" + i);
+                requests[i].setRouting(i % workersCount);
+                requests[i].setRate(rate);
+                Integer[] ids_ = new Integer[ids.size()];
+                ids.toArray(ids_);
+                requests[i].setTradeIds(ids_);
+                i++;
+            }
+            DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
+            status = ptm.getTransaction(definition);
+            space.writeMultiple(requests);
+            ptm.commit(status);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (!status.isCompleted())
+                ptm.rollback(status);
         }
-        DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
-        TransactionStatus status = ptm.getTransaction(definition);
-        space.writeMultiple(requests);
-        ptm.commit(status);
+        return false;
     }
 }
