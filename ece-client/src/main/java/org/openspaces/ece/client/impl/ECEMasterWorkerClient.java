@@ -4,14 +4,11 @@ import org.openspaces.admin.Admin;
 import org.openspaces.admin.AdminFactory;
 import org.openspaces.admin.pu.ProcessingUnit;
 import org.openspaces.admin.pu.ProcessingUnitInstance;
-import org.openspaces.admin.pu.events.ProcessingUnitInstanceLifecycleEventListener;
 import org.openspaces.calcengine.common.CalculateNPVUtil;
 import org.openspaces.calcengine.masterworker.Request;
 import org.openspaces.calcengine.masterworker.Result;
 import org.openspaces.core.GigaSpace;
-import org.openspaces.ece.client.ECEClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -58,6 +55,7 @@ public class ECEMasterWorkerClient extends AbstractECEClient {
         setMaxTrades(maxTrades);
     }
 
+    @SuppressWarnings({"UnusedDeclaration"})
     public ECEMasterWorkerClient(int maxTrades, int maxIterations) {
         this(maxTrades);
         setMaxIterations(maxIterations);
@@ -90,13 +88,13 @@ public class ECEMasterWorkerClient extends AbstractECEClient {
             ids[i] = i;
         }
 
-        for (int r = 0; r < rates.length; r++) {
+        for (double rate:rates) {
             for (int i = 0; i < getMaxIterations(); i++) {
                 // Mapping IDs to worker
                 HashMap<Integer, HashSet<Integer>> partitionIDSDistro = CalculateNPVUtil.splitIDs(ids, workersCount);
                 long startTime = System.currentTimeMillis();
                 logger.info("--> Executing Job " + i + " with " + workersCount + " workers");
-                execute(i, partitionIDSDistro, rates[r]);
+                execute(i, partitionIDSDistro, rate);
                 reduce(i, partitionIDSDistro.size());
                 long endTime = System.currentTimeMillis();
                 logger.info("--> Time to Execute Job " + i + " - " + (endTime - startTime) + "ms\n");
@@ -125,8 +123,8 @@ public class ECEMasterWorkerClient extends AbstractECEClient {
             if (results.length > 0) {
                 count = count + results.length;
                 // aggregate the results into books
-                for (int i = 0; i < results.length; i++) {
-                    HashMap<String, Double> incPositions = results[i].getResultData();
+                for (Result result:results) {
+                    HashMap<String, Double> incPositions = result.getResultData();
                     CalculateNPVUtil.subreducer(aggregatedNPVCalc, incPositions);
                 }
             }
