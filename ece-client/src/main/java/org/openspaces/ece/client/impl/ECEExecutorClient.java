@@ -28,13 +28,17 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-@Service("executor")
 public class ECEExecutorClient implements ECEClient, ProcessingUnitInstanceLifecycleEventListener {
     int workersCount = 8;
     ProcessingUnit workerPU = null;
     double rates[] = {2, 3, 4, 5, 6, 7, 8};
     Logger logger = Logger.getLogger(this.getClass().getName());
     DecimalFormat formatter = new DecimalFormat("0.0");
+               boolean valid=true;
+
+    public boolean isValid() {
+        return valid;
+    }
 
     @Autowired
     PlatformTransactionManager ptm = null;

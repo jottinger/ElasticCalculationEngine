@@ -22,14 +22,17 @@ public class ConsoleClient {
     }
 
     private void run() {
+        System.out.println("Running " + type);
         ECEClient eceClient = ctx.getBean(type, ECEClient.class);
-        if (maxIterations != null) {
-            eceClient.setMaxIterations(maxIterations);
+        if (eceClient.isValid()) {
+            if (maxIterations != null) {
+                eceClient.setMaxIterations(maxIterations);
+            }
+            if (maxTrades != null) {
+                eceClient.setMaxTrades(maxTrades);
+            }
+            eceClient.issueTrades();
         }
-        if (maxTrades != null) {
-            eceClient.setMaxTrades(maxTrades);
-        }
-        eceClient.issueTrades();
     }
 
     ConsoleClient(ApplicationContext ctx) {

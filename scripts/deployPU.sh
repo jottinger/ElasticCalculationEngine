@@ -2,9 +2,9 @@
 
 # This script is designed to deploy the datagrid into an existing GSM.
 
-if [ ! -n "$GSHOME" ] ; then
-    echo Environment variable GSHOME not defined.
-    echo Please set GSHOME to the home directory of your GigaSpaces installation.
+if [ ! -n "$GS_HOME" ] ; then
+    echo Environment variable GS_HOME not defined.
+    echo Please set GS_HOME to the home directory of your GigaSpaces installation.
     exit 1
 fi
 
@@ -40,6 +40,6 @@ if [ ! -f "$SCRIPTDIR/../$1/target/$1.jar" ] ; then
     exit 1
 fi
 
-$GSHOME/bin/gs.sh deploy "$SCRIPTDIR/../$1/target/$1.jar"
+$GS_HOME/bin/gs.sh deploy "$SCRIPTDIR/../$1/target/$1.jar"
 exit 0
 

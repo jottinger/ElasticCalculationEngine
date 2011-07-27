@@ -11,4 +11,6 @@ public interface ECEClient {
 
     void setMaxIterations(int maxIterations);
 
+    boolean isValid();
+
 }

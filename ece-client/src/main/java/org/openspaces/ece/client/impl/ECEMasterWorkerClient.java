@@ -24,13 +24,17 @@ import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-@Service("masterworker")
 public class ECEMasterWorkerClient implements ECEClient, ProcessingUnitInstanceLifecycleEventListener {
     int workersCount = 8;
     ProcessingUnit workerPU = null;
     double rates[] = {2, 3, 4, 5, 6, 7, 8};
     Logger logger = Logger.getLogger(this.getClass().getName());
     DecimalFormat formatter = new DecimalFormat("0.0");
+    boolean valid = false;
+
+    public boolean isValid() {
+        return valid;
+    }
 
     @Autowired
     PlatformTransactionManager ptm = null;
@@ -74,9 +78,8 @@ public class ECEMasterWorkerClient implements ECEClient, ProcessingUnitInstanceL
         } else {
             System.out.println("No workers found; is this intentional? Master/Worker exiting.");
             admin.close();
-            System.exit(1);
-
         }
+        valid = true;
     }
 
     public ECEMasterWorkerClient(int maxTrades) {

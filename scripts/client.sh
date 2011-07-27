@@ -29,4 +29,4 @@ if $cygwin; then
    export BASECLASSPATH=`cygpath --windows $BASECLASSPATH`
 fi
 
-java -cp "$GSCLASSPATH*$SEPARATOR$BASECLASSPATH$SEPARATOR$SCRIPTDIR/../lib/*" org.openspaces.ece.client.ConsoleClient $@
+java -cp "$GSCLASSPATH*$SEPARATOR$BASECLASSPATH$SEPARATOR$SCRIPTDIR/../lib/*$SEPARATOR$SCRIPTDIR/../ece-common/target/ece-common-1.0.jar" org.openspaces.ece.client.ConsoleClient $@
