@@ -9,13 +9,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import java.text.DecimalFormat;
 import java.util.logging.Logger;
 
-/**
- * Created by IntelliJ IDEA.
- * User: joeo
- * Date: 7/27/11
- * Time: 8:41 AM
- * To change this template use File | Settings | File Templates.
- */
 public abstract class AbstractECEClient implements ECEClient, ProcessingUnitInstanceLifecycleEventListener {
     Logger logger = Logger.getLogger(this.getClass().getName());DecimalFormat formatter = new DecimalFormat("0.0");
     boolean valid=true;

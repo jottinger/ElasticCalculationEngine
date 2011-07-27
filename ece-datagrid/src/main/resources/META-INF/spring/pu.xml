@@ -20,7 +20,7 @@
 	<!-- Enable support for @Polling annotation -->
 	<os-events:annotation-support />
 
-	<os-core:space id="space" url="/./CalcDataGrid" />
+	<os-core:space id="space" url="/./ece-datagrid" />
 	<os-core:giga-space id="gigaSpace" space="space"  tx-manager="transactionManager" />
 
 	<!--<os-core:local-cache id="localCacheSpace" space="space">

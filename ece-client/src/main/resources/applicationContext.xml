@@ -21,7 +21,7 @@
 	<!-- Enable support for @Polling annotation -->
 	<os-events:annotation-support />
 
-	<os-core:space id="space" url="jini://*/*/CalcDataGrid?groups=Gigaspaces-XAPPremium-8.0.3-rc" />
+	<os-core:space id="space" url="jini://*/*/ece-datagrid?groups=${group}&amp;locators=${locator}" />
 	<os-core:giga-space id="gigaSpace" space="space"  tx-manager="transactionManager" />
 
     <os-core:giga-space-context/>

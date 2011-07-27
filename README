@@ -10,7 +10,7 @@ one of two modes: an executor-based mode, and a master/worker-based mode.
 There's also a scaling module, which allows a user to alter the characteristics of a deployed datagrid during
 runtime.
 
-To deploy the datagrid, there are three steps:
+To deploy the datagrid for the executor, there are three steps:
 
    1. Build
       mvn package
@@ -21,7 +21,7 @@ To deploy the datagrid, there are three steps:
       * Windows: gs deploy ece-datagrid/target/ece-datagrid.jar
       * UNIX   : gs.sh deploy ece-datagrid/target/ece-datagrid.jar
 
-Now you can start the ece-client application.
+Now you can start the ece-client application with the executor.
 
 To use the Executor-based mechanism:
 
@@ -55,15 +55,23 @@ than two GSMs globally, and no more than two LUSes globally; if you have more th
 one machine running this line, some machines will not start the GSM or LUS if two
 containers exist.)
 
-You can run the Scaling Module like so:
+To scale the data grid, you must deploy through the Elastic Service Manager.
 
-   java $OPTIONS org.openspaces.ece.scalingmodule.ScaleDataGrid
+   * Windows: scripts/gridScale
+   * UNIX   : scripts/gridScale.sh
 
-If the ESM does not have an instance of the ece-datagrid processing unit active
-(which will be the case on a cold restart), this application will deploy and
-configure one programmatically, starting up any required GigaSpace Containers.
+Make sure the worker is deployed, through one of two mechanisms:
 
-It then presents you with a simple console prompt:
+   1. The scaling agent for the worker can deploy for you, if you've
+      deployed it once already.
+      * Windows: scripts/workerScale
+      * UNIX   : scripts/workerScale.sh
+   2. Manual deployment
+      * Windows: scripts/workerDeploy
+      * UNIX   : scripts/workerDeploy.sh
+
+If you deploy manually, run the workerScale script. 
+It presents you with a simple console prompt:
 
 +,-,quit input>
 
