@@ -3,10 +3,10 @@
 # turn off wildcards
 set -f
 
-# make sure GSHOME is defined
-if [ ! -n "$GSHOME" ] ; then
-    echo Environment variable GSHOME not defined.
-    echo Please set GSHOME to the home directory of your GigaSpaces installation.
+# make sure GS_HOME is defined
+if [ ! -n "$GS_HOME" ] ; then
+    echo Environment variable GS_HOME not defined.
+    echo Please set GS_HOME to the home directory of your GigaSpaces installation.
     exit 1
 fi
 
@@ -21,7 +21,7 @@ esac
   
 
 export BASECLASSPATH=$SCRIPTDIR/../ece-client/target/ece-client-1.0.jar
-export GSCLASSPATH="$GSHOME/lib/required/"
+export GSCLASSPATH="$GS_HOME/lib/required/"
 export SEPARATOR=":"
 if $cygwin; then
    export SEPARATOR=";"
@@ -29,4 +29,4 @@ if $cygwin; then
    export BASECLASSPATH=`cygpath --windows $BASECLASSPATH`
 fi
 
-java -cp "$GSCLASSPATH*$SEPARATOR$BASECLASSPATH" org.openspaces.ece.client.ConsoleClient $@
+java -cp "$GSCLASSPATH*$SEPARATOR$BASECLASSPATH$SEPARATOR$SCRIPTDIR/../lib/*" org.openspaces.ece.client.ConsoleClient $@
