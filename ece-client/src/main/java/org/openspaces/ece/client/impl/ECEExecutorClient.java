@@ -28,45 +28,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-public class ECEExecutorClient implements ECEClient, ProcessingUnitInstanceLifecycleEventListener {
+public class ECEExecutorClient extends AbstractECEClient {
     int workersCount = 8;
     ProcessingUnit workerPU = null;
     double rates[] = {2, 3, 4, 5, 6, 7, 8};
-    Logger logger = Logger.getLogger(this.getClass().getName());
-    DecimalFormat formatter = new DecimalFormat("0.0");
-               boolean valid=true;
-
-    public boolean isValid() {
-        return valid;
-    }
-
-    @Autowired
-    PlatformTransactionManager ptm = null;
-    @Autowired
-    GigaSpace space;
-
-    @Override
-    public int getMaxTrades() {
-        return maxTrades;
-    }
-
-    @Override
-    public void setMaxTrades(int maxTrades) {
-        this.maxTrades = maxTrades;
-    }
-
-    @Override
-    public int getMaxIterations() {
-        return maxIterations;
-    }
-
-    @Override
-    public void setMaxIterations(int maxIterations) {
-        this.maxIterations = maxIterations;
-    }
-
-    int maxTrades = 10000;
-    int maxIterations = 100;
 
     public ECEExecutorClient() {
         Admin admin = new AdminFactory().createAdmin();
