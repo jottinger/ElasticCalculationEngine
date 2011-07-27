@@ -17,7 +17,6 @@ import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -123,7 +122,7 @@ public class ECEMasterWorkerClient extends AbstractECEClient {
             if (results.length > 0) {
                 count = count + results.length;
                 // aggregate the results into books
-                for (Result result:results) {
+                for (Result result:results) { //int i = 0; i < results.length; i++) {
                     HashMap<String, Double> incPositions = result.getResultData();
                     CalculateNPVUtil.subreducer(aggregatedNPVCalc, incPositions);
                 }
@@ -153,10 +152,8 @@ public class ECEMasterWorkerClient extends AbstractECEClient {
     public void execute(int jobId, HashMap<Integer, HashSet<Integer>> partitionIDSDistro, double rate) {
         Request requests[] = new Request[partitionIDSDistro.size()];
 
-        Iterator<Integer> iter = partitionIDSDistro.keySet().iterator();
         int i = 0;
-        while (iter.hasNext()) {
-            int key = iter.next();
+        for(Integer key:partitionIDSDistro.keySet()) {
             HashSet<Integer> ids = partitionIDSDistro.get(key);
             requests[i] = new Request();
             requests[i].setJobID(jobId);

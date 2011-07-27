@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # This script is designed to deploy the datagrid into an existing GSM.
-
 if [ ! -n "$GS_HOME" ] ; then
     echo Environment variable GS_HOME not defined.
     echo Please set GS_HOME to the home directory of your GigaSpaces installation.

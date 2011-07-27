@@ -77,8 +77,10 @@ public class ScaleWorker {
             try {
                 scale(pu, initialWorkers);
             } catch (Exception e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();
             }
+        } else {
+            initialWorkers=getPUWorkerCount(pu);
         }
     }
 
@@ -86,7 +88,7 @@ public class ScaleWorker {
         int totalWorkers = getPUWorkerCount(pu);
 
         while (totalWorkers != targetCapacity) {
-            int totalGSCs = pu.getAdmin().getGridServiceContainers().getSize();
+            //int totalGSCs = pu.getAdmin().getGridServiceContainers().getSize();
             System.out.printf("Target Workers: %d - Total Workers: %d%n", targetCapacity, totalWorkers);
             Thread.sleep(2000);
             totalWorkers = getPUWorkerCount(pu);
@@ -128,6 +130,8 @@ public class ScaleWorker {
             if (input.equals("-")) {
                 if (initialWorkers > 1) {
                     initialWorkers--;
+                } else {
+                    scale=false;
                 }
             } else {
                 scale = false;
